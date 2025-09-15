@@ -1,4 +1,4 @@
-import argparse , requests , datetime 
+import argparse , subprocess , requests , datetime , psutil , os
 from colorama import Style , Fore , init
 
 init()
@@ -9,6 +9,8 @@ def main():
     parser = argparse.ArgumentParser(description="Lightweight utility, that helps monitoring system status and way more!")
     
     parser.add_argument("-w" , "--weather" , type=str, help="Check weather!")
+    parser.add_argument("-r" , "--ram" , action="store_true" , help="Get RAM usage!")
+    parser.add_argument("-c" , "--cpu" , action="store_true" , help="Get CPU usage!")
 
     args = parser.parse_args()
 
@@ -50,6 +52,37 @@ def main():
                 print(f"{i}:00 :" + Style.BRIGHT + color , f"{weather_json["hourly"]["temperature_2m"][i]} °C" + Style.RESET_ALL + Style.BRIGHT + Fore.BLUE , weather , Style.RESET_ALL)
         else:
             print(Style.BRIGHT + Fore.RED + "request failed" + Style.RESET_ALL + ": {weather_req.status_code}")
+    
+    if args.ram:
+        ram_usage = psutil.virtual_memory()
+        ram_used = round(((ram_usage.total - ram_usage.available) / 1024 ** 3) , 2)
+        total_ram_usage = round((ram_usage.total / 1024 ** 3) , 2) 
+        if ram_used <= total_ram_usage / 100 * 30:
+            color = Fore.GREEN
+        elif total_ram_usage / 100 * 30 < ram_used <= total_ram_usage / 100 * 75:
+            color = Fore.YELLOW
+        else:
+            color = Fore.RED
+        print(Style.BRIGHT + color +f"{ram_used}" + " GiB /" , total_ram_usage , "GiB" + Style.RESET_ALL)
+    if args.cpu:
+        print("Testing " + Style.BRIGHT + Fore.WHITE + "CPU usage..." + Style.RESET_ALL)
+        core_usage = psutil.cpu_percent(interval=5 , percpu=True)
+        if os.name == "posix":
+            cpu_name = subprocess.run("lscpu | grep 'Model name'" , shell=True , capture_output=True , text=True).stdout.removeprefix("Model name:").strip()
+        else:
+            cpu_name = "CPU"
+        amount_of_cores = len(core_usage)
+        sum_of_core_usage = 0
+        for core in core_usage:
+            sum_of_core_usage += core
+        average_usage = round(sum_of_core_usage / amount_of_cores , 2)
+        if average_usage <= 30:
+            color = Fore.GREEN
+        elif 30 < average_usage <= 75:
+            color = Fore.YELLOW 
+        else:
+            color = Fore.RED 
+        print(cpu_name + ":" , Style.BRIGHT + color + f"{average_usage}% / 100%")
 
 if __name__ == "__main__":
     main()
