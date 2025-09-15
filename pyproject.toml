@@ -1,0 +1,14 @@
+
+[project]
+name = "clistatus"
+version = "0.1.0"
+description = "Lightweight CLI utility to check weather and monitor system status"
+authors = [{ name = "vxid-dev" }]
+dependencies = [
+    "requests",
+    "colorama"
+]
+
+[project.scripts]
+clistatus = "CLIStatus.main:main"
+
