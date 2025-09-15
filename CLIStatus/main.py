@@ -11,6 +11,7 @@ def main():
     parser.add_argument("-w" , "--weather" , type=str, help="Check weather!")
     parser.add_argument("-r" , "--ram" , action="store_true" , help="Get RAM usage!")
     parser.add_argument("-c" , "--cpu" , action="store_true" , help="Get CPU usage!")
+    parser.add_argument("-d" , "--disk" , action="store_true" , help="Get disk usage!")
 
     args = parser.parse_args()
 
@@ -72,9 +73,7 @@ def main():
         else:
             cpu_name = "CPU"
         amount_of_cores = len(core_usage)
-        sum_of_core_usage = 0
-        for core in core_usage:
-            sum_of_core_usage += core
+        sum_of_core_usage = sum(core_usage)
         average_usage = round(sum_of_core_usage / amount_of_cores , 2)
         if average_usage <= 30:
             color = Fore.GREEN
@@ -83,6 +82,16 @@ def main():
         else:
             color = Fore.RED 
         print(cpu_name + ":" , Style.BRIGHT + color + f"{average_usage}% / 100%")
+
+    if args.disk:
+        disk_usage = psutil.disk_usage("/")
+        if disk_usage.used <= disk_usage.total / 100 * 30:
+            color = Fore.GREEN 
+        elif 30 < disk_usage.used < disk_usage.total / 100 * 75:
+            color = Fore.YELLOW 
+        else:
+            color = Fore.RED 
+        print(Style.BRIGHT + color + f"{round((disk_usage.used / 1024 ** 3) , 2)}" + " GiB / " + f"{round((disk_usage.total / 1024 ** 3) , 2)}" + " GiB" + Style.RESET_ALL)
 
 if __name__ == "__main__":
     main()
